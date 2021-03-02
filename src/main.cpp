@@ -1,24 +1,24 @@
 #include <Arduino.h>
 
-const int ledPin = 2;
 
 #include "servo.h"
-/*
-  test servo
- */
- 
-//Servo *towerPro = new Servo(13,90, 1);
 
-Servo towerPro(13, 90, 1);
+
+  Servo towerProSg90( 12,  90, 0, "sg90");
+  Servo towerProMg995(13, 120, 1, "mg995");
+
+const int ledPin = 2;
+
 
 void setup() 
-{            
+{
   pinMode(ledPin, OUTPUT);
    digitalWrite(ledPin, HIGH);
   Serial.begin(115200);
   delay(1000); 
+  towerProSg90.setAngle(0);
+  towerProMg995.setAngle(0);
   digitalWrite(ledPin, LOW);
-  Serial.print("Type in a value from 0 to ");Serial.println(towerPro.getMaxAngle());
 }
 
 
@@ -28,8 +28,8 @@ void loop()
   {      
     int angle=Serial.parseInt();
     Serial.read();
-    Serial.print("got ");Serial.println(angle);
-    towerPro.setAngle(angle);
+    towerProSg90.setAngle(angle);
+    towerProMg995.setAngle(angle);
   }
   
 }
