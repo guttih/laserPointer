@@ -7,7 +7,7 @@
  * @param maxAngle 
  * @param channel 
  */
-Servo::Servo(uint8_t pin, uint16_t maxAngle, uint8_t channel)
+Servo::Servo(uint16_t pin, uint16_t maxAngle, uint16_t channel)
 {
   init(pin, maxAngle, channel);
 }
@@ -22,11 +22,20 @@ Servo::Servo(uint8_t pin, uint16_t maxAngle, uint8_t channel)
  * @param channel 
  * @param strName 
  */
-Servo::Servo(uint8_t pin, uint16_t maxAngle, uint8_t channel, const char *strName)
+Servo::Servo(uint16_t pin, uint16_t maxAngle, uint16_t channel, const char *strName)
 {
   _name = strName;
-  setDebugMode(true);
   init(pin, maxAngle, channel);
+  setDebugMode(true);
+}
+
+Servo::Servo(uint16_t pin, uint16_t maxAngle, uint16_t channel, uint16_t minUs, uint16_t maxUs, const char *strName)
+{
+  _name = strName;
+  _minUs = minUs;
+  _maxUs = maxUs;
+  init(pin, maxAngle, channel);
+  setDebugMode(true);
 }
 
 void Servo::setDebugMode(bool activate)
@@ -34,13 +43,13 @@ void Servo::setDebugMode(bool activate)
   _debugging = activate;
 }
 
-void Servo::init(uint8_t pin, uint16_t maxAngle, uint8_t channel)
+void Servo::init(uint16_t pin, uint16_t maxAngle, uint16_t channel)
 {
   _pin = pin;
   _maxAngle = maxAngle;
   _channel = channel;
   _angle = 0;
-  _debugging = false;
+  setDebugMode(false);
   pinMode(_pin, OUTPUT);
   ledcAttachPin(_pin, _channel);
   ledcSetup(_channel, 50, 16);
@@ -63,7 +72,8 @@ void Servo::setAngle(uint16_t angle)
 
 int Servo::angleToDutyCycle(uint16_t angle)
 {
-  int ms = 1000 + (angle * 1000) / _maxAngle;
-  int duty = (65535 * ms) / 20000;
+  float tickLength = (_maxUs - _minUs) / _maxAngle;
+  int us = _minUs + (angle * tickLength);
+  int duty = (65535 * us) / _periodUs;
   return duty;
 }
