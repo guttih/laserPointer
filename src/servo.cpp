@@ -34,6 +34,11 @@ Servo::Servo(uint16_t pin, uint16_t maxAngle, uint16_t channel, uint16_t minUs, 
   init(pin, maxAngle, channel, minUs, maxUs, name);
 }
 
+Servo::Servo(uint16_t pin, uint16_t maxAngle, uint16_t channel, uint16_t minUs, uint16_t maxUs)
+{
+  init(pin, maxAngle, channel, minUs, maxUs, _name);
+}
+
 void Servo::setDebugMode(bool activate)
 {
   _debugging = activate;
@@ -109,17 +114,17 @@ void Servo::serialPrintInfo()
 {
   Serial.println("-------------------");
   if (_name)
-    Serial.println(String(" name     : ") + _name);
-  Serial.println(String(" pin       : ") + _pin);
-  Serial.println(String(" channel   : ") + _channel);
-  Serial.println(String(" angle     : ") + _angle);
-  Serial.println(String(" dutyCycle : ") + angleToDutyCycle(_angle));
-  Serial.println(String(" onPeriodUs: ") + angleToOnPeriod(_angle));
-  Serial.println(String(" maxAngle  : ") + _maxAngle);
-  Serial.println(String(" minUs     : ") + _minUs);
-  Serial.println(String(" maxUs     : ") + _maxUs);
-  Serial.println(String(" periodUs  : ") + _periodUs);
-  Serial.println(String(" isIdle    : ") + (_isIdle ? "true" : "false"));
-  Serial.println(String(" debugging : ") + (_debugging ? "true" : "false"));
+    Serial.println(String(" name       : ") + _name);
+  Serial.println(String(" pin        : ") + _pin);
+  Serial.println(String(" channel    : ") + _channel);
+  Serial.println(String(" angle      : ") + String(_angle) + "°");
+  Serial.println(String(" on period  : ") + angleToOnPeriod(_angle));
+  Serial.println(String(" dutyCycle  : ") + angleToDutyCycle(_angle));
+  Serial.println(String(" maxAngle   : ") + String(_maxAngle) + "°");
+  Serial.println(String(" min period : ") + String(_minUs) + " micro seconds");
+  Serial.println(String(" max period : ") + String(_maxUs) + " micro seconds");
+  Serial.println(String(" PWM Period : ") + String(_periodUs) + " micro seconds");
+  Serial.println(String(" isIdle     : ") + (_isIdle ? "true" : "false"));
+  Serial.println(String(" debugging  : ") + (_debugging ? "true" : "false"));
   Serial.println("-------------------");
 }

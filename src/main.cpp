@@ -2,8 +2,13 @@
 
 #include "servo.h"
 
+//debugging
 Servo towerProSg90(12, 180, 0, 500, 2400, "sg90");
 Servo towerProMg995(13, 120, 1, "mg995");
+
+//not debugging
+//Servo towerProSg90(12, 180, 0, 500, 2400);
+//Servo towerProMg995(13, 120, 1);
 
 const int ledPin = 2;
 
