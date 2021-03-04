@@ -100,9 +100,9 @@ void loop()
             towerProMg995.serialPrintInfo();
             break;
         case 3000:
-                Serial.println("Setting servos to Idle");
-                towerProMg995.setIdle(true);
-                break;
+            Serial.println("Setting servos to Idle");
+            towerProMg995.setIdle(true);
+            break;
         case 3001:
             Serial.println("Activating servos");
             towerProMg995.setIdle(false);

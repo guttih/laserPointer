@@ -39,10 +39,6 @@ GND                                     +5V
 
 */
 
-
-
-
-
 //debugging
 Servo towerProSg90(12, 180, 0, 500, 2400, "sg90");
 Servo towerProMg995(13, 120, 1, "mg995");
@@ -118,7 +114,7 @@ void loop()
       towerProSg90.setIdle(idleOn);
       towerProMg995.setIdle(idleOn);
     }
-    
+
     else if (angle == 2000)
     {
       towerProSg90.serialPrintInfo();

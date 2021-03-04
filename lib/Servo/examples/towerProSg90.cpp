@@ -47,7 +47,7 @@ void setup()
 void loop()
 {
     delay(1000);
-    angle = angle + 30;  // 6 changes, then reset
+    angle = angle + 30; // 6 changes, then reset
     if (angle > maxAngle)
         angle = 0;
     towerProSg90.setAngle(angle);
