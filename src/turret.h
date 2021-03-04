@@ -1,15 +1,18 @@
 #ifndef TURRET_H
 #define TURRET_H
 #include "arduino.h"
+#include <servo.h>
 
 
 class Turret
 {
 private:
-   uint16_t _pin;
+   Servo *pPan;
+   Servo *pTilt;
 
 public:
-    Turret();
+    Turret(Servo *servoForPan, Servo *servoForTilt);
+    void serialPrintInfo();
 
 };
 

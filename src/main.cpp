@@ -51,6 +51,8 @@ Servo towerProMg995(13, 120, 1, "mg995");
 //Servo towerProSg90(12, 180, 0, 500, 2400);
 //Servo towerProMg995(13, 120, 1);
 
+Turret turret(&towerProMg995, &towerProSg90);
+
 const int ledPin = 2;
 const int laserPin = 15;
 
@@ -93,6 +95,7 @@ void setup()
   towerProMg995.setIdle(true);
   showLaser(false);
   showMenu();
+  turret.serialPrintInfo();
 }
 
 void loop()
