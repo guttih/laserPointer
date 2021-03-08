@@ -6,12 +6,16 @@
 class Turret
 {
 private:
-    Servo *pPan;
     Servo *pTilt;
+    Servo *pPan;
 
 public:
-    Turret(Servo *servoForPan, Servo *servoForTilt);
+    Turret(Servo *servoForTilt, Servo *servoForPan);
     void serialPrintInfo();
+    void tilt(uint16_t angle);
+    void pan(uint16_t angle);
+    void tiltSetIdle(bool idle);
+    void panSetIdle(bool idle);
 };
 
 #endif
