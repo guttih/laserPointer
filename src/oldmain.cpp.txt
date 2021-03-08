@@ -1,8 +1,13 @@
-#include <Arduino.h>
-
 #include <servo.h>
+#include "turret.h"
 
 /*
+
+Using Esp32 and a power supply to control a
+turret consisting of two servos and one 5V laser.
+
+Wiring schematics
+
 
 GND                                     +5V
  ├──────────────────────┐                │
@@ -34,10 +39,6 @@ GND                                     +5V
 
 */
 
-
-
-
-
 //debugging
 Servo towerProSg90(12, 180, 0, 500, 2400, "sg90");
 Servo towerProMg995(13, 120, 1, "mg995");
@@ -45,6 +46,8 @@ Servo towerProMg995(13, 120, 1, "mg995");
 //not debugging
 //Servo towerProSg90(12, 180, 0, 500, 2400);
 //Servo towerProMg995(13, 120, 1);
+
+Turret turret(&towerProMg995, &towerProSg90);
 
 const int ledPin = 2;
 const int laserPin = 15;
@@ -57,22 +60,27 @@ void showLaser(bool activate)
 
 void showMenu()
 {
-  Serial.println("   ---------------------------------------------------- ");
-  Serial.println("  | If you type the following numbers and press return |");
-  Serial.println("  | you will give the servos the following commands.   |");
-  Serial.println("   ---------------------------------------------------- ");
+  Serial.println("   -------------------------------------------------------- ");
+  Serial.println("  |       If you give the following numbers commands       |");
+  Serial.println("  |   you will give the servos the following commands.     |");
+  Serial.println("   -------------------------------------------------------- ");
   Serial.println();
   Serial.println();
-  Serial.println("     ----------------------------------------------- ");
-  Serial.println("    |  Number  Command                              |");
-  Serial.println("    | 0 - 360  change servo angle to n°             |");
-  Serial.println("    |    1000  This command menu                    |");
-  Serial.println("    |    2000  Print all servo properties           |");
-  Serial.println("    |    3000  Disable servo and enable idle mode.  |");
-  Serial.println("    |    3001  Enable servo and disable idle mode.  |");
-  Serial.println("    |    4000  Turn laser off.                      |");
-  Serial.println("    |    4001  Turn laser on.                       |");
-  Serial.println("     ----------------------------------------------- ");
+  Serial.println("   -------------------------------------------------------- ");
+  Serial.println("  | Number       Command                                   |");
+  Serial.println("  |      0       This command menu                         |");
+  Serial.println("  |      1       Print all servo properties                |");
+  Serial.println("  | 1000 - 1360  change tilt servo angle to n°             |");
+  Serial.println("  |     1500     Disable tilt servo and enable idle mode.  |");
+  Serial.println("  |     1501     Enable  tilt servo and disable idle mode. |");
+  Serial.println("  | 2000 - 2360  change pan servo angle to n°              |");
+  Serial.println("  |     2500     Disable pan servo and enable idle mode.   |");
+  Serial.println("  |     2501     Enable  pan servo and disable idle mode.  |");
+  Serial.println("  |     30500     Disable all servos and enable idle mode. |");
+  Serial.println("  |     3001     Enable all servos and disable idle mode.  |");
+  Serial.println("  |     4000     Turn laser off.                           |");
+  Serial.println("  |     4001     Turn laser on.                            |");
+  Serial.println("   -------------------------------------------------------- ");
 }
 
 void setup()
@@ -88,42 +96,56 @@ void setup()
   towerProMg995.setIdle(true);
   showLaser(false);
   showMenu();
+  turret.serialPrintInfo();
 }
 
 void loop()
 {
   if (Serial.available() > 0)
   {
-    int angle = Serial.parseInt();
+    int command = Serial.parseInt();
     Serial.read();
-    Serial.println(angle);
-    if (angle == 4000 || angle == 4001)
+    Serial.println(command);
+    if (command == 4000 || command == 4001)
     {
-      bool laserOn = (angle == 4001);
+      bool laserOn = (command == 4001);
       Serial.println(laserOn ? "Turning laser on" : "Turning laser off");
       showLaser(laserOn);
     }
-    else if (angle == 3000 || angle == 3001)
+    else if (command == 3000 || command == 3001)
     {
-      bool idleOn = (angle == 3000);
+      bool idleOn = (command == 3000);
       Serial.println(idleOn ? "Setting servos to Idle" : "Activating servos");
       towerProSg90.setIdle(idleOn);
       towerProMg995.setIdle(idleOn);
     }
-    
-    else if (angle == 2000)
+
+    if (command >= 1000 && command <= 1360)
+    {
+      turret.tilt(command - 1000);
+    }
+    else if (command == 1500 || command == 1501)
+    {
+      turret.tiltSetIdle(command == 15105150500);
+    }
+
+    else if (command >= 2000 && command <= 2360)
+    {
+      turret.pan(command - 2000);
+    }
+    else if (command == 2500 || command == 2501)
+    {
+      turret.panSetIdle(command == 2500);
+    }
+
+    else if (command == 1)
     {
       towerProSg90.serialPrintInfo();
       towerProMg995.serialPrintInfo();
     }
-    else if (angle == 1000)
+    else if (command == 0)
     {
       showMenu();
-    }
-    else
-    {
-      towerProSg90.setAngle(angle);
-      towerProMg995.setAngle(angle);
     }
   }
 }
