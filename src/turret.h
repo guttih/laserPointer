@@ -18,7 +18,8 @@ public:
     void tiltPowerOn(bool powerOn);
     void panPowerOn(bool powerOn);
     void powerLaser(bool powerOn);
-    bool parseUrlAndExecute(const char *url, bool removeTrailingHTTP);
+    bool parseMoveUrlAndExecute(const char *url, bool removeTrailingHTTP);
+    bool parseActivateUrlAndExecute(const char *url, bool removeTrailingHTTP);
     String getQueryParameterValue(String url, String parameterName);
     bool isValidNumber(String str);
     

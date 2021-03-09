@@ -82,7 +82,7 @@ bool Turret::isValidNumber(String str)
     return true;
 }
 
-bool Turret::parseUrlAndExecute(const char *url, bool removeTrailingHTTP)
+bool Turret::parseMoveUrlAndExecute(const char *url, bool removeTrailingHTTP)
 {
     String parseUrl = url;
     if (removeTrailingHTTP)
@@ -133,4 +133,35 @@ bool Turret::parseUrlAndExecute(const char *url, bool removeTrailingHTTP)
         bRet = true;
     }
     return bRet;
+}
+
+bool Turret::parseActivateUrlAndExecute(const char *url, bool removeTrailingHTTP)
+{
+    String parseUrl = url;
+    if (removeTrailingHTTP)
+    {
+        int i = parseUrl.indexOf(" HTTP");
+        if (i > 0)
+        {
+            parseUrl = parseUrl.substring(0, i);
+        }
+    }
+
+    String active = getQueryParameterValue(parseUrl, "active");
+    Serial.print("\" active:\"");
+    Serial.print(active);
+    Serial.println("\".");
+    bool powerOn;
+    
+    if (active == "true" ||  active == "1") {
+        powerOn = true;
+    } else if (active == "false" ||  active == "0") {
+        powerOn = false;
+    } else return false;
+    
+    tiltPowerOn(powerOn);
+    panPowerOn(powerOn);
+    powerLaser(powerOn);
+    
+    return true;
 }

@@ -1318,9 +1318,20 @@ void handleMove(WiFiClient* client, unsigned int postMethod, const char *calling
 
 
     Serial.println("handleMove -----");
-    turret.parseUrlAndExecute(callingUrl, true);
-    //String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson());
-    //client->println(makeJsonResponseString(200, str));
+    if (turret.parseMoveUrlAndExecute(callingUrl, true))
+        client->println(makeJsonResponseString(201, "{}"));
+    else
+        client->println(makeJsonResponseString(400, "{message:\"Invalid command!\"}"));
+    //String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson()); 
+}
+void handleActivate(WiFiClient* client, unsigned int postMethod, const char *callingUrl) {
+
+
+    Serial.println("handleActivate -----");
+    if (turret.parseActivateUrlAndExecute(callingUrl, true))
+        client->println(makeJsonResponseString(201, "{}"));
+    else
+        client->println(makeJsonResponseString(400, "{message:\"Invalid command!\"}"));
 }
 String makeJsonPostString(String host, String url, String jsonString) {
     String str = "POST " + url + " HTTP/1.1 " +
@@ -1672,6 +1683,12 @@ void loop() {
                         handleMove(&client, METHODS::METHOD_GET, linebuf);
                         break;
                     }
+                    else if (strstr(linebuf, "GET /activate") > 0) {
+                        handleActivate(&client, METHODS::METHOD_GET, linebuf);
+                        break;
+                    }
+
+                    
                     else if (strstr(linebuf, "Content-Length: ") > 0) {
                         String strTemp = String(strstr(linebuf, "Content-Length: ") + 16);
                         strTemp.replace("\r", ""); strTemp.replace("\n", "");
