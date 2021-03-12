@@ -33,9 +33,10 @@ by regular post to the address Haseyla 27, 260 Reykjanesbar, Iceland.
 */
 
 
-Servo towerProSg90(12, 180, 2, 500, 2400, "sg90");
-Servo towerProMg995(13, 120, 3, "mg995");
-Turret turret(&towerProMg995, &towerProSg90, 4);
+Servo    servoTilt(12, 270, 2, 500, 2500, "tilt-RDS3225");
+Servo    servoPan(13, 270, 3, 500, 2500, "pan-RDS3225");
+Turret turret(&servoTilt, &servoPan, 4);
+
 //Turret turret(&towerProMg995, &towerProSg90, 4);
 
 const char* deviceId = "6046506d1b98c504fc743c3e";
@@ -1522,7 +1523,8 @@ void setup() {
         //Do not remove line, here whitelist ip's will be added by VoffCon Node server
     //SETTING_UP_WHITELIST_END
     Serial.println("Whitelist: " + whiteList.toJson());
-
+    turret.setTiltConstraint(11, 264);
+    turret.setPanConstraint(10, 260);
     Serial.println("");
     sta_was_connected = connectWifi();
     if (sta_was_connected)

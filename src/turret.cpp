@@ -4,6 +4,8 @@ Turret::Turret(Servo *servoForTilt, Servo *servoForPan, uint16_t laserPin)
 {
     pTilt = servoForTilt;
     pPan = servoForPan;
+    tiltMaxAngle = pTilt->getMaxAngle();
+    panMaxAngle = pPan->getMaxAngle();
     _laserPin = laserPin;
     pinMode(_laserPin, OUTPUT);
 };
@@ -16,11 +18,44 @@ void Turret::serialPrintInfo()
 
 void Turret::tilt(uint16_t angle)
 {
+    if (angle < tiltMinAngle) {
+        angle = tiltMinAngle;
+    } else if (angle > tiltMaxAngle) {
+        angle = tiltMaxAngle;
+    }
     pTilt->setAngle(angle);
 }
 void Turret::pan(uint16_t angle)
 {
+    if (angle < panMinAngle) {
+        angle = panMinAngle;
+    } else if (angle > panMaxAngle) {
+        angle = panMaxAngle;
+    }
     pPan->setAngle(angle);
+}
+
+bool Turret::setServoConstraint(Servo *pServo, uint16_t minAngle, uint16_t maxAngle) {
+    uint16_t max = maxAngle < pServo->getMaxAngle()? maxAngle : pServo->getMaxAngle();
+    uint16_t min = minAngle < maxAngle? minAngle : 0;
+    if (pServo == pTilt) {
+        tiltMinAngle = min;
+        tiltMaxAngle = max;
+    } else {
+        panMinAngle = min;
+        panMaxAngle = max;
+    }
+    if (pServo->getAngle() < min)
+        pServo->setAngle(min);
+    else if (pServo->getAngle() > max)
+        pServo->setAngle(max);
+
+}
+bool Turret::setTiltConstraint(uint16_t minAngle, uint16_t maxAngle) {
+    setServoConstraint(pTilt, minAngle, maxAngle);
+}
+bool Turret::setPanConstraint(uint16_t minAngle, uint16_t maxAngle) {
+    setServoConstraint(pPan, minAngle, maxAngle);
 }
 void Turret::tiltPowerOn(bool powerOn)
 {
@@ -98,23 +133,13 @@ bool Turret::parseMoveUrlAndExecute(const char *url, bool removeTrailingHTTP)
     String panString = getQueryParameterValue(parseUrl, "pan");
     String laserString = getQueryParameterValue(parseUrl, "laser");
 
-    Serial.print("\" tilt:\"");
-    Serial.print(tiltString);
-    Serial.print("\" pan:\"");
-    Serial.print(panString);
-    Serial.print("\" laser:\"");
-    Serial.print(laserString);
-    Serial.println("\".");
     long tilt = isValidNumber(tiltString) ? atol(tiltString.c_str()) : -1;
     long pan = isValidNumber(panString) ? atol(panString.c_str()) : -1;
     long laser = isValidNumber(laserString) ? atol(laserString.c_str()) : -1;
-    Serial.print("\" xtilt:\"");
-    Serial.print(tilt);
-    Serial.print("\" xpan:\"");
-    Serial.print(pan);
-    Serial.print("\" xlaser:\"");
-    Serial.print(laser);
-    Serial.println("\".");
+    Serial.print(" tilt:"); Serial.print(tilt);
+    Serial.print(" pan:");  Serial.print(pan);
+    Serial.print(" laser:");Serial.print(laser);
+    Serial.println(".");
     bool bRet = false;
     if (tilt < 0 && pan < 0 && laser < 0 ) {
         return false;
