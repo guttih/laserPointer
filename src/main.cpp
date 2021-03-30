@@ -28,6 +28,8 @@ by regular post to the address Haseyla 27, 260 Reykjanesbar, Iceland.
 #include "config.h"
 #include "servo.h"
 #include "turret.h"
+#include "upload-ota.h"
+
 /*
     Board: ESP32 DEV Module
 */
@@ -1524,7 +1526,11 @@ void setup() {
     //SETTING_UP_WHITELIST_END
     Serial.println("Whitelist: " + whiteList.toJson());
     turret.setTiltConstraint(11, 264);
-    turret.setPanConstraint(10, 260);
+    turret.setPanConstraint(0, 255);
+
+    turret.tilt(90);
+    turret.pan(90);
+
     Serial.println("");
     sta_was_connected = connectWifi();
     if (sta_was_connected)
@@ -1534,6 +1540,9 @@ void setup() {
         Serial.println("UNABLE to connect WiFi!");
         while (true);
     }
+
+    setupArduinoOTA();
+
     printWiFiInfo();
     startTime.setTime(reportIn());
     Serial.println("Start time:" + startTime.toString());
@@ -1547,6 +1556,7 @@ void setup() {
     //monitors.addTimer(1000 * 60 * 60 * 24); //once per day
     //monitors.addPinValueMonitoringAndTimer(devicePins.get(5), 1, 2, 500, (1000 * 60 * 60 * 24 * 6));//the 6 day timer will never ve triggered because of the other 1 day timer
     tellServerToSendMonitors();
+    Serial.println("--------- let's get started ----------");
 }
 
 /// <summary>
@@ -1554,7 +1564,7 @@ void setup() {
 /// </summary>
 
 void loop() {
-
+    ArduinoOTA.handle();
     //timerTwoSeconds();
     if (monitors.isAnyPinWatchDo()) {
         // One item did trigger so you could log
@@ -1689,8 +1699,6 @@ void loop() {
                         handleActivate(&client, METHODS::METHOD_GET, linebuf);
                         break;
                     }
-
-                    
                     else if (strstr(linebuf, "Content-Length: ") > 0) {
                         String strTemp = String(strstr(linebuf, "Content-Length: ") + 16);
                         strTemp.replace("\r", ""); strTemp.replace("\n", "");
