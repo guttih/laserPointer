@@ -1,5 +1,5 @@
 
-#### Wiring diagram from Laser Part pointer
+# Wiring diagram from Laser Part pointer
 
 This project will be about driving 2 servos and 1 laser using a esp32 and a power supply to to point to parts or tools, I own around my garage. This project will be connected to another project called GParts which is also located on this github space.
 
@@ -53,4 +53,8 @@ GND                                     +6V
  - __R1__ 100 ohm resistor
  - __R2__ 10**k** ohm resistor
 
-[Ascii codes](https://www.rapidtables.com/code/text/alt-codes.html)
+## Fritzing document
+Here you can see the wiring drawing in fritzing.
+![alt text](.\wiringLaserPointer.png)
+
+You can get the [fritzing document here](.\wiringLaserPointer.fzz).
