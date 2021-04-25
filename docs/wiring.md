@@ -55,6 +55,6 @@ GND                                     +6V
 
 ## Fritzing document
 Here you can see the wiring drawing in fritzing.
-![alt text](.\wiringLaserPointer.png)
+![alt text](./wiringLaserPointer.png)
 
-You can get the [fritzing document here](.\wiringLaserPointer.fzz).
+You can get the [fritzing document here](./wiringLaserPointer.fzz).
