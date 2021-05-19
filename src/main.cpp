@@ -37,7 +37,7 @@ by regular post to the address Haseyla 27, 260 Reykjanesbar, Iceland.
 
 Servo    servoTilt(12, 270, 2, 500, 2500, "tilt-RDS3225");
 Servo    servoPan(13, 270, 3, 500, 2500, "pan-RDS3225");
-Turret turret(&servoTilt, &servoPan, 4);
+Turret turret(&servoTilt, &servoPan, 4, 4);
 
 //Turret turret(&towerProMg995, &towerProSg90, 4);
 
@@ -1317,6 +1317,17 @@ void handleStatus(WiFiClient* client) {
     client->println(makeJsonResponseString(200, str));
 }
 
+void handleSet(WiFiClient* client, unsigned int postMethod, const char *callingUrl) {
+
+
+    Serial.println("handleSet -----");
+    if (turret.parseSetUrlAndExecute(callingUrl, true))
+        client->println(makeJsonResponseString(201, "{}"));
+    else
+        client->println(makeJsonResponseString(400, "{message:\"Invalid command!\"}"));
+    //String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson()); 
+}
+
 void handleMove(WiFiClient* client, unsigned int postMethod, const char *callingUrl) {
 
 
@@ -1541,8 +1552,7 @@ void setup() {
         while (true);
     }
 
-    setupArduinoOTA();
-
+    setupArduinoOTA(deviceId);
     printWiFiInfo();
     startTime.setTime(reportIn());
     Serial.println("Start time:" + startTime.toString());
@@ -1557,6 +1567,7 @@ void setup() {
     //monitors.addPinValueMonitoringAndTimer(devicePins.get(5), 1, 2, 500, (1000 * 60 * 60 * 24 * 6));//the 6 day timer will never ve triggered because of the other 1 day timer
     tellServerToSendMonitors();
     Serial.println("--------- let's get started ----------");
+    turret.serialPrintInfo();
 }
 
 /// <summary>
@@ -1691,6 +1702,10 @@ void loop() {
                         method = METHODS::METHOD_DELETE;
                         command = COMMANDS::COMMANDS_DELETE_WHITELIST;
                     }
+                    else if (strstr(linebuf, "GET /set") > 0) {
+                        handleSet(&client, METHODS::METHOD_GET, linebuf);
+                        break;
+                    }
                     else if (strstr(linebuf, "GET /move") > 0) {
                         handleMove(&client, METHODS::METHOD_GET, linebuf);
                         break;
@@ -1726,6 +1741,7 @@ void loop() {
         contentLength = 0;
         Serial.println("client disconnected");
     }
+    turret.updateTimer();
 }
 ///////////////////////////////////// IMPLEMENTATION OF ALL CLASSES  /////////////////////////////////////
 

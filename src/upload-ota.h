@@ -6,7 +6,7 @@
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
 
-void setupArduinoOTA() {
+void setupArduinoOTA(const char *hostName) {
 
     // Port defaults to 3232
   // ArduinoOTA.setPort(3232);
@@ -48,7 +48,7 @@ void setupArduinoOTA() {
     });
 
   ArduinoOTA.begin();
-
+  ArduinoOTA.setHostname(hostName);
 }
 
 #endif
