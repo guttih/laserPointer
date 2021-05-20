@@ -58,7 +58,8 @@ The [image](docs/wiringLaserPointer.png) is based on
 --------------------------------------------------------------------------------
 ## Available http commands
 
-In examples let's assume the esp32 has been issued the ip address 192.168.1.231.
+In examples let's assume the esp32 has been issued the ip address 192.168.1.231
+on your local network.
 ### Move
 Method: HTTP GET.
 
