@@ -6,6 +6,12 @@
 #define TURRET_LEDC_TIMER_13_BIT  13
 #define TURRET_LEDC_BASE_FREQ  8100
 
+
+struct Point {
+     int x = 0;
+     int y = 0;
+};
+
 class Turret
 {
 private:

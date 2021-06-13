@@ -295,3 +295,12 @@ void Turret::runUpdateTimerFunction(){
     bool isEven = _timerCounter % 2 == 0;
     setLaserIntensity(isEven * _timerTempValue);
 }
+
+Point getCirclePoint(int radius, Point center, int angle) {
+    Point ret;
+    double x = radius * sin(angle * PI/180);
+    double y = radius * cos(angle * PI/180);
+    ret.x = center.x + round(x);
+    ret.y = center.y + round(y);
+    return ret;
+}

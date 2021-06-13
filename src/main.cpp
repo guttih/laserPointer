@@ -1536,8 +1536,8 @@ void setup() {
         //Do not remove line, here whitelist ip's will be added by VoffCon Node server
     //SETTING_UP_WHITELIST_END
     Serial.println("Whitelist: " + whiteList.toJson());
-    turret.setTiltConstraint(11, 264);
-    turret.setPanConstraint(0, 255);
+    turret.setTiltConstraint(55, 200);
+    turret.setPanConstraint(20, 245);
 
     turret.tilt(90);
     turret.pan(90);
