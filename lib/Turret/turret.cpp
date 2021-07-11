@@ -42,6 +42,14 @@ void Turret::pan(uint16_t angle)
     }
     pPan->setAngle(angle);
 }
+void Turret::panAndTilt(uint16_t panAngle, uint16_t tiltAngle, uint32_t delayMs)
+{
+    pan(panAngle);
+    tilt(tiltAngle);
+    if(delayMs > 0)
+        delay(delayMs);
+}
+
 
 
 bool Turret::isLaserOn(bool debugPrint)
@@ -237,36 +245,26 @@ bool Turret::parseGridUrlAndExecute(const char *url, bool removeTrailingHTTP)
     center.x = pan;
     center.y = tilt;
     Point current = getCirclePoint(6, center, 0);
-    this->pan(current.x);
-    this->tilt(current.y);
-    delay(200);
+    panAndTilt(pan, tilt, 1000);
 
     for (int x = 0; x < 2; x++)
     {
-        for (int i = 0; i < 360; i++)
+        for (int i = 0; i < 360; i+=6)
         {
-            current = getCirclePoint(6, center, i);
-            this->pan(current.x);
-            this->tilt(current.y);
-            delay(2);
+            current = getCirclePoint(3, center, i);
+            panAndTilt(current.x, current.y, 2);
         }
     }
 
-    this->pan(pan);
-    this->tilt(tilt);
-    delay(2000);
+    panAndTilt(pan, tilt, 300);
 
-    for (int i = 0; i < 3; i++)
+    for (int i = 0; i < 4; i++)
     {
-        this->pan(pan - 10);this->tilt(tilt);
-        delay(150);
-        this->pan(pan + 10);this->tilt(tilt);
-        delay(150);
+        panAndTilt(pan - 10, tilt, 150);
+        panAndTilt(pan + 10, tilt, 150);
     }
 
-    this->tilt(tilt);
-    this->pan(pan);
-    delay(1000);
+    panAndTilt(pan, tilt, 200);
 
     setLaserIntensity(100);
     setBlink(150);

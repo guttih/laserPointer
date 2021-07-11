@@ -42,6 +42,7 @@ public:
     void serialPrintInfo();
     void tilt(uint16_t angle);
     void pan(uint16_t angle);
+    void panAndTilt(uint16_t panAngle, uint16_t tiltAngle, uint32_t delayMs = 0);
     uint16_t getLaserIntensity() { return _laserPinValue; }
     bool isLaserOn(bool debugPrint = false);
     void setLaserIntensity(uint16_t intensity);
