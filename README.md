@@ -98,6 +98,21 @@ __Set__ accepts two query parameters
 
 Example query
   - `http://192.168.1.231:5100/set?laser=255&blink=3000`
+
+### Grid
+Method: HTTP GET.
+
+
+__Grid__ accepts two query parameters
+ - __tilt__ is a _Required_ parameter for how much in degrees the tower should
+    be tilted (up/down position).
+    - Valid values: 0 - 264.
+ - __pan__ is a _Required_ parameter for how much in degrees the tower should
+    be paned (left/right position).
+    - Valid values: 0 - 255
+
+Example query
+  - `http://192.168.1.231:5100/grid?tilt=70&pan=90`
 --------------------------------------------------------------------------------
 ## Development
 

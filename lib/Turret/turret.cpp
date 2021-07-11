@@ -44,11 +44,20 @@ void Turret::pan(uint16_t angle)
 }
 
 
-void Turret::setLaserIntensity(uint16_t intensity)
+bool Turret::isLaserOn(bool debugPrint)
 {
-    _laserPinValue = min(intensity, (uint16_t)255);
-    //Serial.println(String(" setting laser intensity: ") + _laserPinValue);
-    ledcAnalogWrite(_laserChannel, intensity, 255);
+    bool ret = getLaserIntensity() > 0 || (_blinkTimerTempValue > 0 && _laserTurnOffTime > 0);
+
+    if (debugPrint){
+         unsigned long blinkTimerTempValue =  _blinkTimerTempValue;
+         unsigned long laserTurnOffTime = _laserTurnOffTime;
+         uint16_t laserIntensity = getLaserIntensity();
+        Serial.print(String("getLaserIntensity:")+String(laserIntensity));
+        Serial.print(String(" _blinkTimerTempValue:")+String(blinkTimerTempValue));
+        Serial.print(String(" _laserTurnOffTime:")+String(laserTurnOffTime));
+        Serial.println(String(" ret:")+String(ret));
+    }
+    return ret;
 }
 
 void Turret::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax) {
@@ -64,7 +73,7 @@ void Turret::ledcAnalogWrite(uint8_t channel, uint32_t value, uint32_t valueMax)
     ledcWrite(channel, duty);
 }
 
-bool Turret::setServoConstraint(Servo *pServo, uint16_t minAngle, uint16_t maxAngle) {
+void Turret::setServoConstraint(Servo *pServo, uint16_t minAngle, uint16_t maxAngle) {
     uint16_t max = maxAngle < pServo->getMaxAngle()? maxAngle : pServo->getMaxAngle();
     uint16_t min = minAngle < maxAngle? minAngle : 0;
     if (pServo == pTilt) {
@@ -80,11 +89,11 @@ bool Turret::setServoConstraint(Servo *pServo, uint16_t minAngle, uint16_t maxAn
         pServo->setAngle(max);
 
 }
-bool Turret::setTiltConstraint(uint16_t minAngle, uint16_t maxAngle) {
-    return setServoConstraint(pTilt, minAngle, maxAngle);
+void Turret::setTiltConstraint(uint16_t minAngle, uint16_t maxAngle) {
+    setServoConstraint(pTilt, minAngle, maxAngle);
 }
-bool Turret::setPanConstraint(uint16_t minAngle, uint16_t maxAngle) {
-    return setServoConstraint(pPan, minAngle, maxAngle);
+void Turret::setPanConstraint(uint16_t minAngle, uint16_t maxAngle) {
+    setServoConstraint(pPan, minAngle, maxAngle);
 }
 void Turret::tiltPowerOn(bool powerOn)
 {
@@ -97,8 +106,18 @@ void Turret::panPowerOn(bool powerOn)
 
 void Turret::powerLaser(bool powerOn)
 {
-    Serial.print("Setting laser on pin ");Serial.print(_laserPin); Serial.println(powerOn? " ON" : " OFF");
+    //Serial.print("Setting laser on pin ");Serial.print(_laserPin); Serial.println(powerOn? " ON" : " OFF");
     setLaserIntensity(powerOn? 255: 0);
+}
+
+/**
+ * @brief Sets the maximum time the laser is allowed to be turned on.
+ * In other words, when should it be turned off after it was last turned on.
+ * 
+ * @param _maxPowerOnTimeMs maximum time in milliseconds.
+ */
+void Turret::setLaserMaximumOnTime(unsigned long maxPowerOnTimeMs){
+    _maxPowerOnTime = maxPowerOnTimeMs;
 }
 
 //  returns:
@@ -181,6 +200,80 @@ bool Turret::parseSetUrlAndExecute(const char *url, bool removeTrailingHTTP)
    
     return bRet;
 }
+bool Turret::parseGridUrlAndExecute(const char *url, bool removeTrailingHTTP)
+{
+    String parseUrl = url;
+    if (removeTrailingHTTP)
+    {
+        int i = parseUrl.indexOf(" HTTP");
+        if (i > 0)
+        {
+            parseUrl = parseUrl.substring(0, i);
+        }
+    }
+
+    String tiltString = getQueryParameterValue(parseUrl, "tilt");
+    String panString = getQueryParameterValue(parseUrl, "pan");
+
+    long tilt = isValidNumber(tiltString) ? atol(tiltString.c_str()) : -1;
+    long pan = isValidNumber(panString) ? atol(panString.c_str()) : -1;
+
+    String str = String(" tilt:") + String(tilt) +
+                 String(" pan:") + String(pan);
+    Serial.println(str);
+
+    if (tilt < 0 || pan < 0)
+    {
+        return false;
+    }
+
+    tiltPowerOn(true);
+    panPowerOn(true);
+
+    setLaserIntensity(100);
+    setBlink(0);
+
+    Point center;
+    center.x = pan;
+    center.y = tilt;
+    Point current = getCirclePoint(6, center, 0);
+    this->pan(current.x);
+    this->tilt(current.y);
+    delay(200);
+
+    for (int x = 0; x < 2; x++)
+    {
+        for (int i = 0; i < 360; i++)
+        {
+            current = getCirclePoint(6, center, i);
+            this->pan(current.x);
+            this->tilt(current.y);
+            delay(2);
+        }
+    }
+
+    this->pan(pan);
+    this->tilt(tilt);
+    delay(2000);
+
+    for (int i = 0; i < 3; i++)
+    {
+        this->pan(pan - 10);this->tilt(tilt);
+        delay(150);
+        this->pan(pan + 10);this->tilt(tilt);
+        delay(150);
+    }
+
+    this->tilt(tilt);
+    this->pan(pan);
+    delay(1000);
+
+    setLaserIntensity(100);
+    setBlink(150);
+
+    return true;
+}
+
 bool Turret::parseMoveUrlAndExecute(const char *url, bool removeTrailingHTTP)
 {
     String parseUrl = url;
@@ -234,18 +327,25 @@ bool Turret::parseMoveUrlAndExecute(const char *url, bool removeTrailingHTTP)
     return bRet;
 }
 
+/**
+ * @brief Makes the laser blink.
+ * 
+ * @param intervalInMilliseconds 
+ */
 void Turret::setBlink(long intervalInMilliseconds) {
 
     if (intervalInMilliseconds < 1 ) {
-        _timerInterval = 0;
-        _timer = 0;
-        _timerTempValue = 0;
-        _timerCounter = 0;
+        _blinkTimerInterval = 0;
+        _blinkTime = 0;
+        _blinkTimerTempValue = 0;
+        _blinkTimerCounter = 0;
     } else {
-        _timerInterval = intervalInMilliseconds;
-        _timer = millis() + _timerInterval;
-        _timerTempValue = _laserPinValue;
-        _timerCounter = 0;
+        _blinkTimerInterval = intervalInMilliseconds;
+        _blinkTime = millis() + _blinkTimerInterval;
+
+        _blinkTimerCounter = 0;
+        if (_laserPinValue > 0)
+            _blinkTimerTempValue = _laserPinValue;
     } 
 }
 
@@ -279,24 +379,53 @@ bool Turret::parseActivateUrlAndExecute(const char *url, bool removeTrailingHTTP
     
     return true;
 }
-void Turret::updateTimer()
+
+
+void Turret::setLaserIntensity(uint16_t intensity)
 {
-    if (_timer == 0) 
-        return;
+    _laserPinValue = min(intensity, (uint16_t)255);
+    
+    if (_laserPinValue > 0) {
+        _blinkTimerTempValue = _laserPinValue;
+        _laserTurnOffTime = millis() + _maxPowerOnTime;
+    }
+
+    ledcAnalogWrite(_laserChannel, _laserPinValue, 255);
+}
+
+void Turret::setLaserIntensityBlink(uint16_t intensity)
+{
+    _laserPinValue = min(intensity, (uint16_t)255);
+    ledcAnalogWrite(_laserChannel, _laserPinValue, 255);
+}
+
+void Turret::updateTimers()
+{
 
     unsigned long now = millis();
-    if (now >= _timer ) {
-        _timerCounter++;
-        runUpdateTimerFunction();
-        _timer = now + _timerInterval;
+    if (_blinkTime == 0 && _laserTurnOffTime == 0)
+        return;
+
+    if (now >= _laserTurnOffTime) {
+        _laserTurnOffTime = 0;
+        setLaserIntensity(0);
+        return;
+    }
+
+    if (now >= _blinkTime && _blinkTime > 0) {
+        _blinkTimerCounter++;
+        runUpdateBlinkTimerFunction();
+        _blinkTime = now + _blinkTimerInterval;
     }
 }
-void Turret::runUpdateTimerFunction(){
-    bool isEven = _timerCounter % 2 == 0;
-    setLaserIntensity(isEven * _timerTempValue);
+
+void Turret::runUpdateBlinkTimerFunction(){
+    
+    bool isEven = _blinkTimerCounter % 2 == 0;
+    setLaserIntensityBlink(isEven * _blinkTimerTempValue);
 }
 
-Point getCirclePoint(int radius, Point center, int angle) {
+Point Turret::getCirclePoint(int radius, Point center, int angle) {
     Point ret;
     double x = radius * sin(angle * PI/180);
     double y = radius * cos(angle * PI/180);

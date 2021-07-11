@@ -1338,6 +1338,17 @@ void handleMove(WiFiClient* client, unsigned int postMethod, const char *calling
         client->println(makeJsonResponseString(400, "{message:\"Invalid command!\"}"));
     //String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson()); 
 }
+
+void handleGrid(WiFiClient* client, unsigned int postMethod, const char *callingUrl) {
+
+
+    Serial.println("handleGrid -----");
+    if (turret.parseGridUrlAndExecute(callingUrl, true))
+        client->println(makeJsonResponseString(201, "{}"));
+    else
+        client->println(makeJsonResponseString(400, "{message:\"Invalid command!\"}"));
+}
+
 void handleActivate(WiFiClient* client, unsigned int postMethod, const char *callingUrl) {
 
 
@@ -1536,9 +1547,9 @@ void setup() {
         //Do not remove line, here whitelist ip's will be added by VoffCon Node server
     //SETTING_UP_WHITELIST_END
     Serial.println("Whitelist: " + whiteList.toJson());
-    turret.setTiltConstraint(55, 200);
-    turret.setPanConstraint(20, 245);
-
+    turret.setTiltConstraint(25, 240);
+    turret.setPanConstraint (8, 237);
+    turret.setLaserMaximumOnTime(5 * 60 * 1000);
     turret.tilt(90);
     turret.pan(90);
 
@@ -1710,6 +1721,11 @@ void loop() {
                         handleMove(&client, METHODS::METHOD_GET, linebuf);
                         break;
                     }
+                    else if (strstr(linebuf, "GET /grid") > 0) {
+                        handleGrid(&client, METHODS::METHOD_GET, linebuf);
+                        break;
+                    }
+                    
                     else if (strstr(linebuf, "GET /activate") > 0) {
                         handleActivate(&client, METHODS::METHOD_GET, linebuf);
                         break;
@@ -1741,7 +1757,7 @@ void loop() {
         contentLength = 0;
         Serial.println("client disconnected");
     }
-    turret.updateTimer();
+    turret.updateTimers();
 }
 ///////////////////////////////////// IMPLEMENTATION OF ALL CLASSES  /////////////////////////////////////
 
