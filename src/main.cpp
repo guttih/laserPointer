@@ -1450,6 +1450,7 @@ bool connectWifiHelper(String ssid, String password, uint32_t uiDelay) {
         delay(uiDelay);
         iTriesLeft--;
         status = WiFi.status();
+        WiFi.hostname("laserPointer");
     }
     Serial.println();
     if (status == WL_CONNECTED) {
