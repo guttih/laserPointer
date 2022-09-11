@@ -42,6 +42,7 @@ Turret turret(&servoTilt, &servoPan, 4, 4);
 //Turret turret(&towerProMg995, &towerProSg90, 4);
 
 const char* deviceId = "6046506d1b98c504fc743c3e";
+const char* hostName = "laserPointer";
 // Name of the wifi (accesspoint)network
 // example: "guttisWiFi"
 const char* ssid = getSSID();
@@ -620,7 +621,7 @@ public:
     String jsonKeyValue(String key, String value);
     String jsonKeyValue(String key, int value);
     String jsonObjectType(unsigned int uiType);
-    String makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate);
+    String makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName);
     String makePostLogPinsJson(String deviceId, String jsonPins);
     String makeHttpStatusCodeString(unsigned int uiStatusCode);
     String jsonRoot(unsigned int uiType, String key, String value);
@@ -1313,7 +1314,7 @@ void handleStatus(WiFiClient* client) {
         whiteList.add(voffconServerIp);
     }
 
-    String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson());
+    String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson(), deviceId, hostName);
     client->println(makeJsonResponseString(200, str));
 }
 
@@ -1450,7 +1451,7 @@ bool connectWifiHelper(String ssid, String password, uint32_t uiDelay) {
         delay(uiDelay);
         iTriesLeft--;
         status = WiFi.status();
-        WiFi.hostname("laserPointer");
+        WiFi.hostname(hostName);
     }
     Serial.println();
     if (status == WL_CONNECTED) {
@@ -2611,11 +2612,13 @@ String GUrl::jsonObjectType(unsigned int uiType) {
     return jsonKeyValue("type", str);
 }
 
-String GUrl::makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate) {
+String GUrl::makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName) {
     String str = "{" +
         jsonObjectType(OBJECTTYPE_STATUS) + "," +
         jsonKeyValue("pins", jsonPins) + "," +
         jsonKeyValue("whitelist", jsonWhitelist) + "," +
+        jsonKeyValue("deviceId", "\""+deviceId+ "\"") + "," +
+        jsonKeyValue("hostName", "\""+hostName+ "\"") + "," +
         jsonKeyValue("date", jsonDate) +
         "}";
     return str;
