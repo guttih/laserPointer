@@ -621,7 +621,7 @@ public:
     String jsonKeyValue(String key, String value);
     String jsonKeyValue(String key, int value);
     String jsonObjectType(unsigned int uiType);
-    String makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName);
+    String makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName, String deviceIpAddress, int port);
     String makePostLogPinsJson(String deviceId, String jsonPins);
     String makeHttpStatusCodeString(unsigned int uiStatusCode);
     String jsonRoot(unsigned int uiType, String key, String value);
@@ -1314,7 +1314,7 @@ void handleStatus(WiFiClient* client) {
         whiteList.add(voffconServerIp);
     }
 
-    String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson(), deviceId, hostName);
+    String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson(), deviceId, hostName, client->localIP().toString(), PORT);
     client->println(makeJsonResponseString(200, str));
 }
 
@@ -2612,13 +2612,15 @@ String GUrl::jsonObjectType(unsigned int uiType) {
     return jsonKeyValue("type", str);
 }
 
-String GUrl::makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName) {
+String GUrl::makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName, String deviceIpAddress, int port) {
     String str = "{" +
         jsonObjectType(OBJECTTYPE_STATUS) + "," +
         jsonKeyValue("pins", jsonPins) + "," +
         jsonKeyValue("whitelist", jsonWhitelist) + "," +
         jsonKeyValue("deviceId", "\""+deviceId+ "\"") + "," +
         jsonKeyValue("hostName", "\""+hostName+ "\"") + "," +
+        jsonKeyValue("ip", "\""+deviceIpAddress+ "\"") + "," +
+        jsonKeyValue("port", String(port)) + "," +
         jsonKeyValue("date", jsonDate) +
         "}";
     return str;
