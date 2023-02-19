@@ -42,7 +42,7 @@ Turret turret(&servoTilt, &servoPan, 4, 4);
 //Turret turret(&towerProMg995, &towerProSg90, 4);
 
 const char* deviceId = "6046506d1b98c504fc743c3e";
-const char* hostName = "laserPointer";
+const char* hostName = "laser_pointer";
 // Name of the wifi (accesspoint)network
 // example: "guttisWiFi"
 const char* ssid = getSSID();
@@ -621,7 +621,7 @@ public:
     String jsonKeyValue(String key, String value);
     String jsonKeyValue(String key, int value);
     String jsonObjectType(unsigned int uiType);
-    String makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName, String deviceIpAddress, int port);
+    String makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String macAddress, String deviceId, String hostName, String deviceIpAddress, int port);
     String makePostLogPinsJson(String deviceId, String jsonPins);
     String makeHttpStatusCodeString(unsigned int uiStatusCode);
     String jsonRoot(unsigned int uiType, String key, String value);
@@ -1314,7 +1314,7 @@ void handleStatus(WiFiClient* client) {
         whiteList.add(voffconServerIp);
     }
 
-    String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson(), deviceId, hostName, client->localIP().toString(), PORT);
+    String str = urlTool.makeStatusResponceJson(devicePins.toJson(), whiteList.toJson(), startTime.toJson(), WiFi.macAddress(), deviceId, hostName, client->localIP().toString(), PORT);
     client->println(makeJsonResponseString(200, str));
 }
 
@@ -1427,8 +1427,9 @@ void printWiFiInfo() {
     //Serial.print  ("WiFi psk       :"); Serial.println(WiFi.psk());  
     Serial.print("WiFi.BSSIDstr  :"); Serial.println(WiFi.BSSIDstr());
     Serial.print("WiFi status    :"); Serial.println(WiFi.status());
+    Serial.print("WiFi.macAddress:"); Serial.println(WiFi.macAddress());
+    Serial.print("WiFi.getHostname   :"); Serial.println(WiFi.getHostname());
     Serial.print("VOFFCON ip and port:"); Serial.println(voffconServerIp.toString() + ":" + voffconServerPort);
-
     Serial.println("----------------------------------");
 }
 bool connectWifiHelper(String ssid, String password, uint32_t uiDelay) {
@@ -1539,6 +1540,26 @@ static void timerTwoSeconds(void) {
     }
 }
 
+static void reconnectIfDisconnected(void) {
+    static bool connectionWasDisconnected = false;
+    static int connectionCount = 0;
+    if (WiFi.isConnected()){
+        if (connectionWasDisconnected){
+            connectionWasDisconnected = false;
+            connectionCount = 0;
+        }
+        return;
+    }
+    connectionWasDisconnected = true;
+    static uint32_t timerCheckWifiConnection = millis();
+    if ((millis() - timerCheckWifiConnection) > 10000) {
+        Serial.print("Reconnecting ");Serial.print(++connectionCount);Serial.println(" to WiFi...");
+        WiFi.disconnect();
+        WiFi.reconnect();
+        timerCheckWifiConnection = millis();
+    }
+}
+
 void setup() {
     //Initialize serial and wait for port to open:
     Serial.begin(115200);
@@ -1565,7 +1586,7 @@ void setup() {
         while (true);
     }
 
-    setupArduinoOTA(deviceId);
+    setupArduinoOTA(hostName);
     printWiFiInfo();
     startTime.setTime(reportIn());
     Serial.println("Start time:" + startTime.toString());
@@ -1595,6 +1616,7 @@ void loop() {
         tellServerToSaveLog();
         monitors.resetAllChecks();
     }
+    reconnectIfDisconnected();
     
     // listen for incoming clients
     WiFiClient client = server.available();
@@ -2612,19 +2634,21 @@ String GUrl::jsonObjectType(unsigned int uiType) {
     return jsonKeyValue("type", str);
 }
 
-String GUrl::makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String deviceId, String hostName, String deviceIpAddress, int port) {
+String GUrl::makeStatusResponceJson(String jsonPins, String jsonWhitelist, String jsonDate, String macAddress, String deviceId, String hostName, String deviceIpAddress, int port) {
     String str = "{" +
-        jsonObjectType(OBJECTTYPE_STATUS) + "," +
-        jsonKeyValue("pins", jsonPins) + "," +
-        jsonKeyValue("whitelist", jsonWhitelist) + "," +
-        jsonKeyValue("deviceId", "\""+deviceId+ "\"") + "," +
-        jsonKeyValue("hostName", "\""+hostName+ "\"") + "," +
-        jsonKeyValue("ip", "\""+deviceIpAddress+ "\"") + "," +
-        jsonKeyValue("port", String(port)) + "," +
-        jsonKeyValue("date", jsonDate) +
+        jsonObjectType(OBJECTTYPE_STATUS)                + "," +
+        jsonKeyValue("pins", jsonPins)                   + "," +
+        jsonKeyValue("whitelist", jsonWhitelist)         + "," +
+        jsonKeyValue("macAddress","\""+macAddress+ "\"") + "," +
+        jsonKeyValue("deviceId", "\""+deviceId+ "\"")    + "," +
+        jsonKeyValue("hostName", "\""+hostName+ "\"")    + "," +
+        jsonKeyValue("ip", "\""+deviceIpAddress+ "\"")   + "," +
+        jsonKeyValue("port", String(port))               + "," +
+        jsonKeyValue("date", jsonDate)   +
         "}";
     return str;
 }
+
 String GUrl::makePostLogPinsJson(String deviceId, String jsonPins) {
     String str = "{" +
         jsonObjectType(OBJECTTYPE_LOG_PINS) + "," +
